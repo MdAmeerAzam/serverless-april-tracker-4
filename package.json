@@ -1,0 +1,21 @@
+{
+  "dependencies": {
+    "@mathieuc/tradingview": "^3.5.2",
+    "axios": "^1.15.0",
+    "google-auth-library": "^10.6.2",
+    "google-spreadsheet": "^5.2.0",
+    "pg": "^8.20.0",
+    "technicalindicators": "^3.1.0"
+  },
+  "name": "serverless-april-currency",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}

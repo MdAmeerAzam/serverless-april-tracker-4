@@ -1,0 +1,61 @@
+name: Currency Cloud Sync & Backup
+
+on:
+  schedule:
+    # Sync: every 15 minutes
+    - cron: '8,23,38,53 * * * *'
+    # Backup: every 15 minutes with 5-minute offset
+    - cron: '13,28,43,58 * * * *'
+    # Watchdog: every 4 hours at minute 18
+    - cron: '18 */4 * * *'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    name: Sync TradingView → Supabase
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'schedule' && (github.event.schedule == '8,23,38,53 * * * *'))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - name: Run Currency Sync
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: node scripts/run_currency_sync.js
+
+  backup:
+    name: Backup Supabase → Sheets
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'schedule' && (github.event.schedule == '13,28,43,58 * * * *'))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: echo '${{ secrets.GOOGLE_CREDENTIALS_JSON }}' > credentials.json
+      - name: Run Currency Backup
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: node scripts/run_currency_backup.js
+
+  watchdog:
+    name: Cloud Currency WATCHDOG
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'schedule' && github.event.schedule == '18 */4 * * *')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - name: Run Currency Health Audit
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: node scripts/run_currency_watchdog.js
