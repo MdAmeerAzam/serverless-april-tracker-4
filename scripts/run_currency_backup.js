@@ -43,19 +43,19 @@ async function backup() {
                     const { rows: pgRows } = await client.query(`SELECT * FROM ${tableName} WHERE timestamp >= $1 ORDER BY timestamp ASC`, [maxTimestamp]);
                     
                     const toAppend = pgRows.map(r => ({
-                        'Date / Time (Local)': new Date(Number(r.timestamp)).toLocaleString(),
-                        'Date / Time (UTC)': new Date(Number(r.timestamp)).toISOString(),
-                        timestamp: r.timestamp,
-                        open: r.open,
-                        high: r.high,
-                        low: r.low,
-                        '1-SAR': r.sar1,
-                        '2-SAR': r.sar2,
-                        '3-SAR INF': r.sar3,
-                        close: r.closevalue,
-                        Pts: r.closepts,
-                        '%': r.closepct,
-                        closeVol: r.closevol
+                        id:         r.id,
+                        timestamp:  r.timestamp,
+                        date:       new Date(Number(r.timestamp)).toISOString(),
+                        open:       r.open,
+                        high:       r.high,
+                        low:        r.low,
+                        sar1:       r.sar1,
+                        sar2:       r.sar2,
+                        sar3:       r.sar3,
+                        closeValue: r.closevalue,
+                        closePts:   r.closepts,
+                        closePct:   r.closepct,
+                        closeVol:   r.closevol
                     }));
 
                     if (maxTimestamp > 0 && toAppend.length > 0 && Number(toAppend[0].timestamp) === maxTimestamp) {
