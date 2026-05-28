@@ -84,7 +84,12 @@ async function extractTradingView(ticker, timeframe) {
 async function processAndSaveData(client, tableName, klines) {
     if (klines.length < 3) return;
 
-    const { rows: existingRows } = await client.query(`SELECT timestamp, sar1, sar2, sar3 FROM ${tableName} ORDER BY timestamp ASC`);
+    // Fetch existing SAR data for history continuity (Limited to active 200-candle window)
+    const minTimestamp = klines[0].timestamp;
+    const { rows: existingRows } = await client.query(
+        `SELECT timestamp, sar1, sar2, sar3 FROM ${tableName} WHERE timestamp >= $1 ORDER BY timestamp ASC`,
+        [minTimestamp]
+    );
     const existingSarMap = new Map();
     existingRows.forEach(r => existingSarMap.set(String(r.timestamp), r));
 
