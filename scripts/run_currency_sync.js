@@ -156,6 +156,9 @@ async function processAndSaveData(client, tableName, klines) {
         `);
     }
 
+    // Auto-heal dirty historical Zero-Reset violations
+    await client.query(`UPDATE ${tableName} SET sar3 = 0 WHERE sar3 = sar1 AND sar1 != 0`);
+
     console.log(`  ✔ [Synced] ${tableName}`);
 }
 
