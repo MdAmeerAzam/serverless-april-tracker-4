@@ -4,7 +4,7 @@ const { JWT } = require('google-auth-library');
 const credentials = require('../credentials.json');
 
 const SPREADSHEET_ID = '1rOWiPPq8YdpX8X5TDbeu5kfbc5INLgShtd-0RmaFAhk';
-const ASSETS = ['aud'];
+const ASSETS = ['dxy', 'eur', 'gbp', 'jpy', 'aud', 'cad', 'inr'];
 const MARKETS = ['spot', 'futures'];
 const INTERVALS = ['daily', 'weekly', 'monthly'];
 
