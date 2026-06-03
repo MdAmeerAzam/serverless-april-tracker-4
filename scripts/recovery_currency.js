@@ -4,7 +4,7 @@ const { JWT } = require('google-auth-library');
 const credentials = require('../credentials.json');
 
 const SPREADSHEET_ID = '1rOWiPPq8YdpX8X5TDbeu5kfbc5INLgShtd-0RmaFAhk';
-const ASSETS = ['dxy', 'eur', 'gbp', 'jpy', 'aud', 'cad', 'inr'];
+const ASSETS = ['aud'];
 const MARKETS = ['spot', 'futures'];
 const INTERVALS = ['daily', 'weekly', 'monthly'];
 
@@ -38,12 +38,12 @@ async function runInfinityPush() {
 
                         let sheet = doc.sheetsByTitle[tableName];
                         if (sheet) {
-                            await new Promise(res => setTimeout(res, 1200));
+                            await new Promise(res => setTimeout(res, 2000));
                             await sheet.clear();
-                            await new Promise(res => setTimeout(res, 1200));
+                            await new Promise(res => setTimeout(res, 2000));
                             await sheet.setHeaderRow(headerValues);
                         } else {
-                            await new Promise(res => setTimeout(res, 1200));
+                            await new Promise(res => setTimeout(res, 2000));
                             sheet = await doc.addSheet({ title: tableName, headerValues });
                         }
 
@@ -66,7 +66,7 @@ async function runInfinityPush() {
                         console.log(`    Pushing ${formattedRows.length} rows to Google Sheets...`);
                         const chunkSize = 1000;
                         for (let k = 0; k < formattedRows.length; k += chunkSize) {
-                            await new Promise(res => setTimeout(res, 1200));
+                            await new Promise(res => setTimeout(res, 2000));
                             await sheet.addRows(formattedRows.slice(k, k + chunkSize));
                         }
                         console.log(`    ✔ ${tableName} Push Complete.`);
