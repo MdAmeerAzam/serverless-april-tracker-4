@@ -15,7 +15,7 @@ async function checkTable(client, asset, market, interval) {
     const result = { name: tableName, status: 'OK', errors: [] };
 
     try {
-        const { rows } = await client.query(`SELECT timestamp, sar1, sar2, sar3 FROM ${tableName} ORDER BY timestamp DESC LIMIT 7`);
+        const { rows } = await client.query(`SELECT timestamp, sar1, sar2, sar3 FROM ${tableName} ORDER BY timestamp DESC LIMIT 30`);
         if (rows.length === 0) {
             result.status = 'FAIL';
             result.errors.push('Table is empty');
@@ -31,9 +31,10 @@ async function checkTable(client, asset, market, interval) {
             result.errors.push(`Sync Gap: Late by ${gapUnits.toFixed(1)} ${interval.key} candles`);
         }
 
-        let sar2Flatline = true;
+        let sar2Flatline = false;
         let sar1Missing = false;
         let zeroResetViolation = false;
+        let sar2MissingCount = 0;
 
         for (let i = 0; i < rows.length; i++) {
             const r = rows[i];
@@ -43,15 +44,16 @@ async function checkTable(client, asset, market, interval) {
             const isClosed = (i > 0);
 
             if (Math.abs(s1) < 0.000001) sar1Missing = true;
-            if (Math.abs(s2) > 0.000001) sar2Flatline = false;
+            if (Math.abs(s2) < 0.000001) sar2MissingCount++;
 
             if (isClosed && Math.abs(s3) > 0.000001 && Math.abs(s3 - s1) < 0.000001) {
                 zeroResetViolation = true;
             }
         }
+        if (sar2MissingCount > 5) sar2Flatline = true; // Genesis sweep failed (tolerates live sync zeroes)
 
         if (sar1Missing) result.errors.push('Genesis missing (SAR 1 = 0)');
-        if (sar2Flatline) result.errors.push('Algorithm death (SAR 2 flatline)');
+        if (sar2Flatline) result.errors.push(`Algorithm death (SAR 2 Genesis sweep failed)`);
         if (zeroResetViolation) result.errors.push('Zero-Reset 3 violation (Dirty historical data)');
 
         if (result.errors.length > 0) result.status = 'ISSUE';

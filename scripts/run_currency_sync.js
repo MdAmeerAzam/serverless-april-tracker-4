@@ -97,10 +97,8 @@ async function processAndSaveData(client, tableName, klines) {
     const lowList = klines.map(k => k.low);
 
     const sarResults = new PSAR({ high: highList, low: lowList, step: 0.02, max: 0.2 }).getResult();
-    const sarResults2 = new PSAR({ high: highList, low: lowList, step: 0.01, max: 0.1 }).getResult();
     
     const sarOffset = klines.length - sarResults.length;
-    const sarOffset2 = klines.length - sarResults2.length;
     const formattedValues = [];
 
     for (let i = 0; i < klines.length; i++) {
@@ -110,13 +108,12 @@ async function processAndSaveData(client, tableName, klines) {
 
         if (i >= sarOffset) {
             const currentCalcSar = sarResults[i - sarOffset]; 
-            const currentS2 = sarResults2[i - sarOffset2] || 0;
             const existing = existingSarMap.get(String(kline.timestamp));
 
             if (existing) {
                 const oldHistoricalS1 = Number(existing.sar1);
                 s1 = oldHistoricalS1 !== 0 ? oldHistoricalS1 : currentCalcSar;
-                s2 = currentS2;
+                s2 = 0; // SAR 2 is mathematically invalid on 200 candles. Hardcoded to 0 for Genesis sweep.
 
                 if (isLiveCandle) {
                     s3 = (Math.abs(currentCalcSar - oldHistoricalS1) > 0.000001 && oldHistoricalS1 !== 0) ? currentCalcSar : 0;
@@ -126,7 +123,7 @@ async function processAndSaveData(client, tableName, klines) {
                 }
             } else {
                 s1 = currentCalcSar;
-                s2 = currentS2;
+                s2 = 0; // SAR 2 is mathematically invalid on 200 candles. Hardcoded to 0 for Genesis sweep.
                 s3 = 0;
             }
         }

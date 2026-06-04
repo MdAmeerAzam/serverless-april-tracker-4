@@ -1,0 +1,23 @@
+name: SAR 2 True Currency Genesis
+
+on:
+  schedule:
+    # Runs at the 59th minute of every hour to sweep and heal the database
+    - cron: '59 * * * *'
+  workflow_dispatch:
+
+jobs:
+  genesis:
+    name: Genesis Engine (SAR 2 Auto-Healer)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - name: Run Genesis
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: node scripts/run_currency_genesis.js
