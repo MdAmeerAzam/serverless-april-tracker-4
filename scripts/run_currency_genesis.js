@@ -42,6 +42,7 @@ async function run() {
                         await new Promise(res => setTimeout(res, 3000)); // Strict TradingView Pacing
                     } catch (e) {
                         console.error(`[Failure] ${tableName}:`, e.message);
+                        await client.query('ROLLBACK').catch(() => {});
                     }
                 }
             }
