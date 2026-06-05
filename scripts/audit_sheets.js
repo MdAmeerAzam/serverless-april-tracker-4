@@ -13,7 +13,25 @@ async function runAudit() {
     let totalDbCells = 0;
     let totalSheetCells = 0;
     
-    const client = await pool.connect();
+        const client = await pool.connect();
+        const dbCounts = {};
+        for (const a of ASSETS) {
+            for (const m of MARKETS) {
+                for (const i of INTERVALS) {
+                    const tableName = `curr_${a}_${m}_${i}`;
+                    try {
+                        const { rows } = await client.query(`SELECT COUNT(*) as exact_count FROM ${tableName}`);
+                        dbCounts[tableName] = Number(rows[0].exact_count);
+                    } catch(e) {
+                        dbCounts[tableName] = -1;
+                    }
+                }
+            }
+        }
+        client.release();
+        let clientReleased = true;
+        await pool.end();
+
     try {
         const creds = require(path.join(process.cwd(), 'credentials.json'));
         const auth = new JWT({
@@ -36,29 +54,25 @@ async function runAudit() {
                         continue;
                     }
 
-                    try {
-                        const { rows } = await client.query(`SELECT COUNT(*) as exact_count FROM ${tableName}`);
-                        const dbRows = Number(rows[0].exact_count);
-                        const dbCells = dbRows * 13; 
-                        
-                        await sheet.loadCells('A1:M1'); 
-                        const sheetRows = sheet.rowCount - 1; 
-                        const sheetCells = sheetRows * 13;
+                    if (dbCounts[tableName] === -1) {
+                         console.log(`[Skipped] ${tableName} -> Table does not exist in Supabase`);
+                         continue;
+                    }
 
-                        totalDbCells += dbCells;
-                        totalSheetCells += sheetCells;
+                    const dbRows = dbCounts[tableName];
+                    const dbCells = dbRows * 13; 
+                    
+                    await sheet.loadCells('A1:M1'); 
+                    const sheetRows = sheet.rowCount - 1; 
+                    const sheetCells = sheetRows * 13;
 
-                        if (dbRows === sheetRows) {
-                            console.log(`[Verified] ${tableName} -> DB Rows: ${dbRows} | Sheet Rows: ${sheetRows} | DB Cells: ${dbCells} | Sheet Cells: ${sheetCells}`);
-                        } else {
-                            console.error(`[Mismatched] ${tableName} -> DB Rows: ${dbRows} | Sheet Rows: ${sheetRows}`);
-                        }
-                    } catch (err) {
-                        if (err.message.includes('relation') && err.message.includes('does not exist')) {
-                            console.log(`[Skipped] ${tableName} -> Table does not exist in Supabase`);
-                        } else {
-                            throw err;
-                        }
+                    totalDbCells += dbCells;
+                    totalSheetCells += sheetCells;
+
+                    if (dbRows === sheetRows) {
+                        console.log(`[Verified] ${tableName} -> DB Rows: ${dbRows} | Sheet Rows: ${sheetRows} | DB Cells: ${dbCells} | Sheet Cells: ${sheetCells}`);
+                    } else {
+                        console.error(`[Mismatched] ${tableName} -> DB Rows: ${dbRows} | Sheet Rows: ${sheetRows}`);
                     }
                 }
             }
@@ -70,7 +84,9 @@ async function runAudit() {
         console.log("=========================================");
 
     } finally {
-        client.release();
+        if (!clientReleased) {
+            try { client.release(); } catch(e){}
+        }
         process.exit(0);
     }
 }
