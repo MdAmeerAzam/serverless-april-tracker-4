@@ -18,8 +18,15 @@ const TIMEFRAME_MAP = {
     monthly: '1M'
 };
 
+const { isSystemLocked } = require('../api/mutex');
+
 async function run() {
-    console.log("[Deep Extractor] Initializing Standalone Currency Handshake...");
+    if (await isSystemLocked('MAINTENANCE_LOCK')) {
+        console.log('[ABORT] Global Mutex Lock is active. Heavy cloud maintenance in progress across distributed network.');
+        process.exit(0); 
+    }
+
+    console.log("[Deep Extractor] Initializing Standalone TradingView Handshake for CURRENCY...");
     const client = await pool.connect();
     try {
         for (const asset of Object.keys(TICKER_MAP)) {
