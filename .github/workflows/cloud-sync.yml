@@ -1,13 +1,8 @@
 name: Currency Cloud Sync & Backup
 
 on:
-  schedule:
-    # Sync: every 15 minutes
-    - cron: '8,23,38,53 * * * *'
-    # Backup: every 15 minutes with 5-minute offset
-    - cron: '13,28,43,58 * * * *'
-    # Watchdog: every 4 hours at minute 18
-    - cron: '18 */4 * * *'
+  # STOPPED — June 10, 2026. Repo 4 (Currency) halted pending full rebuild.
+  # All schedule triggers disabled. Manual dispatch preserved for controlled execution only.
   workflow_dispatch:
 
 concurrency:
